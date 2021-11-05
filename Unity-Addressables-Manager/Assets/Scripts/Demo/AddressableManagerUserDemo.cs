@@ -1,19 +1,18 @@
 ﻿using System.Threading.Tasks;
 using AddressablesSystem;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 
 namespace Demo
 {
 	public class AddressableManagerUserDemo : MonoBehaviour
 	{
-		[SerializeField] AssetReference prefab;
+		[SerializeField] ComponentReference<TestPrefab> prefab;
 		
 		async void Awake()
 		{
-			GameObject a = await AddressablesManager.InstantiateAsync(prefab);
+			var op = await prefab.InstantiateAsync(Vector3.down, Quaternion.identity, transform);
 			await Task.Delay(10000);
-			Destroy(a);
+			DestroyImmediate(op.Result.gameObject);
 		}
 	}
 }

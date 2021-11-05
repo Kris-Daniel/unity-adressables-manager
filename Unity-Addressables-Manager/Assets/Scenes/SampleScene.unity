@@ -330,7 +330,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2c01c8a04c644600ae94b326feb32a4f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  loader: {fileID: 0}
   prefab:
     m_AssetGUID: 3b740cc400011ea41a328c3fc064c4a2
     m_SubObjectName: 

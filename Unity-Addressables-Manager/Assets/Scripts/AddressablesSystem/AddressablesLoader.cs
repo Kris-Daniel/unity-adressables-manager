@@ -21,8 +21,47 @@ namespace AddressablesSystem
 		{
 			OnCtsTokenSet += CheckForReleaseAssetReferences;
 		}
-
+		
 		public async Task<GameObject> InstantiateAsync(AssetReference assetReference)
+		{
+			var op = await LoadAssetReference(assetReference);
+
+			if (op.Status == AsyncOperationStatus.Succeeded)
+			{
+				var go = await Addressables.InstantiateAsync(assetReference);
+				
+				assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(go);
+				assetReferenceDataStore[assetReference].IsReady = true;
+				
+				return go;
+			}
+
+			return null;
+		}
+
+		public async Task<AsyncOperationHandle<T>> InstantiateAsync<T>(AssetReference assetReference, Action<Transform> callback) where T : MonoBehaviour
+		{
+			var op = await LoadAssetReference(assetReference);
+
+			if (op.Status == AsyncOperationStatus.Succeeded)
+			{
+				return Addressables.ResourceManager.CreateChainOperation<T, GameObject>(
+					Addressables.InstantiateAsync(assetReference), GameObjectReady);
+				
+				AsyncOperationHandle<T> GameObjectReady(AsyncOperationHandle<GameObject> arg)
+				{
+					var comp = arg.Result.GetComponent<T>();
+					assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(comp.gameObject);
+					assetReferenceDataStore[assetReference].IsReady = true;	
+					callback?.Invoke(comp.transform);
+					return Addressables.ResourceManager.CreateCompletedOperation<T>(comp, string.Empty);
+				}
+			}
+
+			return default;
+		}
+
+		async Task<AsyncOperationHandle<GameObject>> LoadAssetReference(AssetReference assetReference)
 		{
 			AsyncOperationHandle<GameObject> op;
 
@@ -44,17 +83,7 @@ namespace AddressablesSystem
 				await op.Task;
 			}
 
-			if (op.Status == AsyncOperationStatus.Succeeded)
-			{
-				var go = await Addressables.InstantiateAsync(assetReference);
-				
-				assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(go);
-				assetReferenceDataStore[assetReference].IsReady = true;
-				
-				return go;
-			}
-
-			return null;
+			return op;
 		}
 
 		async void CheckForReleaseAssetReferences()
@@ -86,13 +115,13 @@ namespace AddressablesSystem
 						referencesToDelete.Add(keyValuePair.Key);
 					}
 				}
-				
+
 				foreach (var assetReference in referencesToDelete)
 				{
 					assetReferenceDataStore.Remove(assetReference);
 				}
 
-				await Task.Delay(2000, CtsToken);
+				await Task.Delay(2000);
 			}
 		}
 	}

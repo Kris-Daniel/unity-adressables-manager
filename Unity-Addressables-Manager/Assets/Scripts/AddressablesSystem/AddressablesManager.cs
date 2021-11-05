@@ -1,7 +1,9 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using Utils.Cancellation;
 
 namespace AddressablesSystem
@@ -28,6 +30,11 @@ namespace AddressablesSystem
 		public static async Task<GameObject> InstantiateAsync(AssetReference assetReference)
 		{
 			return await AddressablesLoader.InstantiateAsync(assetReference);
+		}
+		
+		public static async Task<AsyncOperationHandle<T>> InstantiateAsync<T>(AssetReference assetReference, Action<Transform> callback) where T : MonoBehaviour
+		{
+			return await AddressablesLoader.InstantiateAsync<T>(assetReference, callback);
 		}
 	}
 }
