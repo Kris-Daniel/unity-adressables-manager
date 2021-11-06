@@ -9,9 +9,14 @@ namespace AddressablesSystem
 		public event Action<GameObject, AssetReference> Destroyed;
 		public AssetReference AssetReference { get; set; }
 
-		void OnDestroy()
+		public void SelfRelease()
 		{
 			Destroyed?.Invoke(gameObject, AssetReference);
+		}
+
+		void OnDestroy()
+		{
+			SelfRelease();
 		}
 	}
 }

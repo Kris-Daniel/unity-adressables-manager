@@ -68,17 +68,21 @@ namespace AddressablesSystem
 
         public void ReleaseInstance(AsyncOperationHandle<TComponent> op)
         {
-            return;
-            // Release the instance
             var component = op.Result as Component;
+            
             if (component != null)
             {
-                Addressables.ReleaseInstance(component.gameObject);
+                if (component.TryGetComponent(out SelfReleaseOnDestroy selfReleaseOnDestroy))
+                {
+                    selfReleaseOnDestroy.SelfRelease();
+                    
+                    return;
+                }
+                
+                Debug.LogWarningFormat($"GameObject {component.gameObject.name} has no SelfReleaseOnDestroy component.");
             }
-
-            // Release the handle
-            Addressables.Release(op);
+            
+            Debug.LogWarningFormat($"{typeof(TComponent)} is null.");
         }
     }
 }
-

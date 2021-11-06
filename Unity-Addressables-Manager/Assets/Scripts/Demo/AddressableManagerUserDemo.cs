@@ -6,7 +6,7 @@ namespace Demo
 {
 	public class AddressableManagerUserDemo : MonoBehaviour
 	{
-		[SerializeField] ComponentReference<TestPrefab> prefab;
+		[SerializeField] ComponentReference<TestPrefab2> prefab;
 		
 		async void Awake()
 		{

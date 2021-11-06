@@ -50,6 +50,11 @@ namespace AddressablesSystem
 				{
 					var comp = arg.Result.GetComponent<T>();
 
+					if (!comp)
+					{
+						throw new Exception("Current serialized Object has wrong component.");
+					}
+
 					InitInstantiatedGameObject(comp.gameObject, assetReference);
 					
 					callback?.Invoke(comp.transform);
@@ -60,19 +65,14 @@ namespace AddressablesSystem
 			return default;
 		}
 
-		void InitInstantiatedGameObject(GameObject gameObject, AssetReference assetReference)
-		{
-			var selfReleaseOnDestroy = gameObject.AddComponent<SelfReleaseOnDestroy>();
-			selfReleaseOnDestroy.AssetReference = assetReference;
-			selfReleaseOnDestroy.Destroyed += RemoveInstantiatedGameObject;
-			
-			assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(gameObject);
-			assetReferenceDataStore[assetReference].IsReady = true;	
-		}
-
 		async Task<AsyncOperationHandle<GameObject>> LoadAssetReference(AssetReference assetReference)
 		{
 			AsyncOperationHandle<GameObject> op;
+			
+			if (assetReference == null || assetReference.AssetGUID.Length == 0)
+			{
+				throw new Exception("Asset Reference is null.");
+			}
 
 			if (assetReferenceDataStore.ContainsKey(assetReference))
 			{
@@ -93,6 +93,16 @@ namespace AddressablesSystem
 			}
 
 			return op;
+		}
+		
+		void InitInstantiatedGameObject(GameObject gameObject, AssetReference assetReference)
+		{
+			var selfReleaseOnDestroy = gameObject.AddComponent<SelfReleaseOnDestroy>();
+			selfReleaseOnDestroy.AssetReference = assetReference;
+			selfReleaseOnDestroy.Destroyed += RemoveInstantiatedGameObject;
+			
+			assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(gameObject);
+			assetReferenceDataStore[assetReference].IsReady = true;	
 		}
 
 		void RemoveInstantiatedGameObject(GameObject gameObject, AssetReference assetReference)
