@@ -19,7 +19,7 @@ namespace AddressablesSystem
 
 		public AddressablesLoader()
 		{
-			OnCtsTokenSet += CheckForReleaseAssetReferences;
+			//OnCtsTokenSet += CheckForReleaseAssetReferences;
 		}
 		
 		public async Task<GameObject> InstantiateAsync(AssetReference assetReference)
@@ -29,9 +29,8 @@ namespace AddressablesSystem
 			if (op.Status == AsyncOperationStatus.Succeeded)
 			{
 				var go = await Addressables.InstantiateAsync(assetReference);
-				
-				assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(go);
-				assetReferenceDataStore[assetReference].IsReady = true;
+
+				InitInstantiatedGameObject(go, assetReference);
 				
 				return go;
 			}
@@ -45,20 +44,30 @@ namespace AddressablesSystem
 
 			if (op.Status == AsyncOperationStatus.Succeeded)
 			{
-				return Addressables.ResourceManager.CreateChainOperation<T, GameObject>(
-					Addressables.InstantiateAsync(assetReference), GameObjectReady);
+				return Addressables.ResourceManager.CreateChainOperation<T, GameObject>(Addressables.InstantiateAsync(assetReference), GameObjectReady);
 				
 				AsyncOperationHandle<T> GameObjectReady(AsyncOperationHandle<GameObject> arg)
 				{
 					var comp = arg.Result.GetComponent<T>();
-					assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(comp.gameObject);
-					assetReferenceDataStore[assetReference].IsReady = true;	
+
+					InitInstantiatedGameObject(comp.gameObject, assetReference);
+					
 					callback?.Invoke(comp.transform);
 					return Addressables.ResourceManager.CreateCompletedOperation<T>(comp, string.Empty);
 				}
 			}
 
 			return default;
+		}
+
+		void InitInstantiatedGameObject(GameObject gameObject, AssetReference assetReference)
+		{
+			var selfReleaseOnDestroy = gameObject.AddComponent<SelfReleaseOnDestroy>();
+			selfReleaseOnDestroy.AssetReference = assetReference;
+			selfReleaseOnDestroy.Destroyed += RemoveInstantiatedGameObject;
+			
+			assetReferenceDataStore[assetReference].InstantiatedGameObjects.Add(gameObject);
+			assetReferenceDataStore[assetReference].IsReady = true;	
 		}
 
 		async Task<AsyncOperationHandle<GameObject>> LoadAssetReference(AssetReference assetReference)
@@ -84,6 +93,26 @@ namespace AddressablesSystem
 			}
 
 			return op;
+		}
+
+		void RemoveInstantiatedGameObject(GameObject gameObject, AssetReference assetReference)
+		{
+			if (assetReferenceDataStore.ContainsKey(assetReference))
+			{
+				if (assetReferenceDataStore[assetReference].InstantiatedGameObjects.Contains(gameObject))
+				{
+					assetReferenceDataStore[assetReference].InstantiatedGameObjects.Remove(gameObject);
+					
+					Addressables.ReleaseInstance(gameObject);
+
+					if (assetReferenceDataStore[assetReference].InstantiatedGameObjects.Count == 0)
+					{
+						Addressables.Release(assetReferenceDataStore[assetReference].OperationHandle);
+						
+						assetReferenceDataStore.Remove(assetReference);
+					}
+				}
+			}
 		}
 
 		async void CheckForReleaseAssetReferences()
