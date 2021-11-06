@@ -36,5 +36,10 @@ namespace AddressablesSystem
 		{
 			return await AddressablesLoader.InstantiateAsync<T>(assetReference, callback);
 		}
+
+		public static async Task<AsyncOperationHandle> LoadAssetReference(AssetReference assetReference)
+		{
+			return await AddressablesLoader.LoadAssetReference(assetReference);
+		}
 	}
 }

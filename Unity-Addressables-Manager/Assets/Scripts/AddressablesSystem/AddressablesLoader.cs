@@ -65,7 +65,7 @@ namespace AddressablesSystem
 			return default;
 		}
 
-		async Task<AsyncOperationHandle<GameObject>> LoadAssetReference(AssetReference assetReference)
+		public async Task<AsyncOperationHandle<GameObject>> LoadAssetReference(AssetReference assetReference)
 		{
 			AsyncOperationHandle<GameObject> op;
 			

@@ -11,12 +11,12 @@ namespace AddressablesSystem
 
 		public void SelfRelease()
 		{
-			Destroyed?.Invoke(gameObject, AssetReference);
+			Destroy(gameObject);
 		}
 
 		void OnDestroy()
 		{
-			SelfRelease();
+			Destroyed?.Invoke(gameObject, AssetReference);
 		}
 	}
 }

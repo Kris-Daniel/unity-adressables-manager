@@ -43,10 +43,9 @@ namespace AddressablesSystem
             });
         }
         
-        public AsyncOperationHandle<TComponent> LoadAssetAsync()
+        public async Task<AsyncOperationHandle> LoadAssetAsync()
         {
-            return default;
-            //return Addressables.ResourceManager.CreateChainOperation<TComponent, GameObject>(base.LoadAssetAsync<GameObject>(), GameObjectReady);
+            return await AddressablesManager.LoadAssetReference(this);
         }
 
         public override bool ValidateAsset(Object obj)
