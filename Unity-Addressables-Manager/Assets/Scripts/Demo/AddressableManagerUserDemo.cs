@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using AddressablesSystem;
+﻿using AddressablesSystem;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace Demo
@@ -7,16 +7,52 @@ namespace Demo
 	public class AddressableManagerUserDemo : MonoBehaviour
 	{
 		[SerializeField] ComponentReference<TestPrefab> prefab;
-		
+		[SerializeField] GameObject simplePrefab;
+		[SerializeField] bool useAddressables;
+
 		async void Awake()
 		{
-			await prefab.LoadAssetAsync();
+			// Load example 1
+			var op1 = await AddressablesManager.LoadAssetReference(prefab);
 			
-			var op = await prefab.InstantiateAsync(Vector3.down, Quaternion.identity, transform);
+			// Load example 2
+			var op2 = await prefab.LoadAssetAsync();
+		}
 
-			await Task.Delay(10000);
+		void Update()
+		{
+			if (Input.GetKeyDown(KeyCode.S))
+			{
+				for (int i = 0; i < 2; i++)
+				{
+					if (useAddressables)
+					{
+						SpawnAddressablePrefab();
+					}
+					else
+					{
+						for (int j = 0; j < 4; j++)
+						{
+							var go = Instantiate(simplePrefab);
+						}
+					}
+				}
+			}
+		}
+
+		async void SpawnAddressablePrefab()
+		{
+			// Spawn Example 1
+			var go1 = await AddressablesManager.InstantiateAsync(prefab);
 			
-			prefab.ReleaseInstance(op);
+			// Spawn Example 2
+			var go2 = await AddressablesManager.InstantiateAsync<TestPrefab>(prefab).Result;
+			
+			// Spawn Example 3
+			var go3 = await prefab.InstantiateAsync().Result;
+			
+			// Spawn Example 4
+			var go4 = await prefab.InstantiateAsync(transform, true).Result;
 		}
 	}
 }

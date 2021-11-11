@@ -13,6 +13,7 @@ namespace AddressablesSystem
 	public class AddressablesLoader : ICancellationTokenUser
 	{
 		readonly Dictionary<AssetReference, AssetReferenceData> assetReferenceDataStore = new Dictionary<AssetReference, AssetReferenceData>();
+		readonly Dictionary<GameObject, AsyncOperationHandle> createdCompletedOperations = new Dictionary<GameObject, AsyncOperationHandle>();
 		
 		public CancellationToken CtsToken { get; set; }
 		public Action OnCtsTokenSet { get; set; }
@@ -22,49 +23,6 @@ namespace AddressablesSystem
 			//OnCtsTokenSet += CheckForReleaseAssetReferences;
 		}
 		
-		public async Task<GameObject> InstantiateAsync(AssetReference assetReference)
-		{
-			var op = await LoadAssetReference(assetReference);
-
-			if (op.Status == AsyncOperationStatus.Succeeded)
-			{
-				var go = await Addressables.InstantiateAsync(assetReference);
-
-				InitInstantiatedGameObject(go, assetReference);
-				
-				return go;
-			}
-
-			return null;
-		}
-
-		public async Task<AsyncOperationHandle<T>> InstantiateAsync<T>(AssetReference assetReference, Action<Transform> callback) where T : MonoBehaviour
-		{
-			var op = await LoadAssetReference(assetReference);
-
-			if (op.Status == AsyncOperationStatus.Succeeded)
-			{
-				return Addressables.ResourceManager.CreateChainOperation<T, GameObject>(Addressables.InstantiateAsync(assetReference), GameObjectReady);
-				
-				AsyncOperationHandle<T> GameObjectReady(AsyncOperationHandle<GameObject> arg)
-				{
-					var comp = arg.Result.GetComponent<T>();
-
-					if (!comp)
-					{
-						throw new Exception("Current serialized Object has wrong component.");
-					}
-
-					InitInstantiatedGameObject(comp.gameObject, assetReference);
-					
-					callback?.Invoke(comp.transform);
-					return Addressables.ResourceManager.CreateCompletedOperation<T>(comp, string.Empty);
-				}
-			}
-
-			return default;
-		}
-
 		public async Task<AsyncOperationHandle<GameObject>> LoadAssetReference(AssetReference assetReference)
 		{
 			AsyncOperationHandle<GameObject> op;
@@ -76,7 +34,7 @@ namespace AddressablesSystem
 
 			if (assetReferenceDataStore.ContainsKey(assetReference))
 			{
-				op = assetReferenceDataStore[assetReference].OperationHandle;
+				op = assetReferenceDataStore[assetReference].LoadOperationHandle;
 				
 				while (!op.IsDone && !CtsToken.IsCancellationRequested)
 				{
@@ -86,15 +44,49 @@ namespace AddressablesSystem
 			else
 			{
 				op = Addressables.LoadAssetAsync<GameObject>(assetReference);
-				
-				assetReferenceDataStore[assetReference] = new AssetReferenceData{OperationHandle = op};
+
+				assetReferenceDataStore[assetReference] = new AssetReferenceData{LoadOperationHandle = op};
 				
 				await op.Task;
 			}
 
-			return op;
+			if (op.Status == AsyncOperationStatus.Succeeded)
+			{
+				return op;
+			}
+			
+			throw new Exception($"Cannot Load Asset Reference: {assetReference}.");
 		}
 		
+		public async Task<GameObject> InstantiateAsync(AssetReference assetReference)
+		{
+			await LoadAssetReference(assetReference);
+
+			var go = await Addressables.InstantiateAsync(assetReference);
+
+			InitInstantiatedGameObject(go, assetReference);
+				
+			return go;
+		}
+
+		public async Task<AsyncOperationHandle<T>> InstantiateAsync<T>(AssetReference assetReference) where T : MonoBehaviour
+		{
+			var go = await InstantiateAsync(assetReference);
+
+			var comp = go.GetComponent<T>();
+
+			if (!comp)
+			{
+				throw new Exception("Current serialized Object has wrong component.");
+			}
+
+			var completedOp = Addressables.ResourceManager.CreateCompletedOperation<T>(comp, string.Empty);
+			
+			createdCompletedOperations[go] = completedOp;
+
+			return completedOp;
+		}
+
 		void InitInstantiatedGameObject(GameObject gameObject, AssetReference assetReference)
 		{
 			var selfReleaseOnDestroy = gameObject.AddComponent<SelfReleaseOnDestroy>();
@@ -115,9 +107,16 @@ namespace AddressablesSystem
 					
 					Addressables.ReleaseInstance(gameObject);
 
+					if (createdCompletedOperations.ContainsKey(gameObject))
+					{
+						Addressables.ReleaseInstance(createdCompletedOperations[gameObject]);
+
+						createdCompletedOperations.Remove(gameObject);
+					}
+
 					if (assetReferenceDataStore[assetReference].InstantiatedGameObjects.Count == 0)
 					{
-						Addressables.Release(assetReferenceDataStore[assetReference].OperationHandle);
+						Addressables.Release(assetReferenceDataStore[assetReference].LoadOperationHandle);
 						
 						assetReferenceDataStore.Remove(assetReference);
 					}
@@ -149,7 +148,7 @@ namespace AddressablesSystem
 					}
 					else if(currentAssetReferenceData.IsReady)
 					{
-						Addressables.Release(currentAssetReferenceData.OperationHandle);
+						Addressables.Release(currentAssetReferenceData.LoadOperationHandle);
 						
 						referencesToDelete.Add(keyValuePair.Key);
 					}

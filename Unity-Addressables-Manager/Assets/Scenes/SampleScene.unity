@@ -312,7 +312,7 @@ GameObject:
   - component: {fileID: 1851970138}
   - component: {fileID: 1851970137}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: DemoAddressableSpawner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -331,10 +331,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   prefab:
-    m_AssetGUID: 3b740cc400011ea41a328c3fc064c4a2
+    m_AssetGUID: 77ec3c4e07a36814fb3169ecef41b50a
     m_SubObjectName: 
     m_SubObjectType: 
     m_EditorAssetChanged: 0
+  simplePrefab: {fileID: 100000, guid: c792a880628388445a95708d1f1aca26, type: 3}
+  useAddressables: 1
 --- !u!4 &1851970138
 Transform:
   m_ObjectHideFlags: 0

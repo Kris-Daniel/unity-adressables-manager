@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -19,28 +20,34 @@ namespace AddressablesSystem
     
         public new async Task<AsyncOperationHandle<TComponent>> InstantiateAsync(Vector3 position, Quaternion rotation, Transform parent = null)
         {
-            return await AddressablesManager.InstantiateAsync<TComponent>(this, tf =>
-            {
-                tf.position = position;
-                tf.rotation = rotation;
-                tf.SetParent(parent);
-            });
+            var op = await AddressablesManager.InstantiateAsync<TComponent>(this);
+
+            var tf = op.Result.transform;
+            
+            tf.position = position;
+            tf.rotation = rotation;
+            tf.SetParent(parent);
+
+            return op;
         }
    
         public new async Task<AsyncOperationHandle<TComponent>> InstantiateAsync(Transform parent = null, bool instantiateInWorldSpace = false)
         {
-            return await AddressablesManager.InstantiateAsync<TComponent>(this, tf =>
+            var op = await AddressablesManager.InstantiateAsync<TComponent>(this);
+
+            var tf = op.Result.transform;
+            
+            if (!instantiateInWorldSpace)
             {
-                if (!instantiateInWorldSpace)
-                {
-                    tf.SetParent(parent);
-                }
-                else
-                {
-                    tf.transform.position = parent.position;
-                    tf.transform.rotation = parent.rotation;
-                }
-            });
+                tf.SetParent(parent);
+            }
+            else
+            {
+                tf.transform.position = parent.position;
+                tf.transform.rotation = parent.rotation;
+            }
+
+            return op;
         }
         
         public async Task<AsyncOperationHandle> LoadAssetAsync()

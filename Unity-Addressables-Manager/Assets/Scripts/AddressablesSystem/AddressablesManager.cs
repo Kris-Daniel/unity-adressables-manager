@@ -32,9 +32,9 @@ namespace AddressablesSystem
 			return await AddressablesLoader.InstantiateAsync(assetReference);
 		}
 		
-		public static async Task<AsyncOperationHandle<T>> InstantiateAsync<T>(AssetReference assetReference, Action<Transform> callback) where T : MonoBehaviour
+		public static async Task<AsyncOperationHandle<T>> InstantiateAsync<T>(AssetReference assetReference) where T : MonoBehaviour
 		{
-			return await AddressablesLoader.InstantiateAsync<T>(assetReference, callback);
+			return await AddressablesLoader.InstantiateAsync<T>(assetReference);
 		}
 
 		public static async Task<AsyncOperationHandle> LoadAssetReference(AssetReference assetReference)

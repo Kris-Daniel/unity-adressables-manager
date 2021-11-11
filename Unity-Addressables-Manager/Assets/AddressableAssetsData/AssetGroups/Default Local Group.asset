@@ -21,10 +21,6 @@ MonoBehaviour:
     m_Address: Assets/JMO Assets/Cartoon FX/CFX Prefabs/Electric/CFX_ElectricityBall.prefab
     m_ReadOnly: 0
     m_SerializedLabels: []
-  - m_GUID: bc98890f6028f444eaa7789bde5e2eeb
-    m_Address: Assets/JMO Assets/Cartoon FX/CFX2 Prefabs/Blood/CFX2_Blood.prefab
-    m_ReadOnly: 0
-    m_SerializedLabels: []
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: d3ebb7539a036764ebd19d39353e63ce, type: 2}
   m_SchemaSet:

@@ -7,7 +7,7 @@ namespace AddressablesSystem
 	public class AssetReferenceData
 	{
 		public List<GameObject> InstantiatedGameObjects { get; set; } = new List<GameObject>();
-		public AsyncOperationHandle<GameObject> OperationHandle { get; set; }
+		public AsyncOperationHandle<GameObject> LoadOperationHandle { get; set; }
 		public bool IsReady { get; set; }
 	}
 }
