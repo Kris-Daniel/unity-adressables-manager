@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Utils.Cancellation
+namespace AddressablesSystem.Cancellation
 {
 	public interface ICancellationTokenUser
 	{
