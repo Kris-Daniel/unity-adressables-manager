@@ -8,7 +8,7 @@ Use EventViewer to see that all works as expectly. In unity _Window/Asset Manage
 # Installation
 1. Install Addressables package from unity package manager
 2. Install [UniTask](https://github.com/Cysharp/UniTask)
-3. Install unity-adressables-manager package
+3. Install [unity-adressables-manager](https://github.com/Kris-Daniel/unity-adressables-manager/raw/main/addressables-manager.unitypackage) package
 
 # Getting Started
 ### ComponentReference
