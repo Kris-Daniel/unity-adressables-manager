@@ -12,8 +12,7 @@ namespace AddressablesSystem
 		static AddressablesLoader AddressablesLoader;
 		static CancellationTokenSource Cts;
 
-		[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-		static void Initialize()
+		public static void Initialize()
 		{
 			Cts = new CancellationTokenSource();
 
